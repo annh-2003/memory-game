@@ -4,7 +4,7 @@
   "description": "Game lật thẻ tìm cặp - luyện trí nhớ cho bé",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#2a7b9b",
   "theme_color": "#2a7b9b",
   "icons": [

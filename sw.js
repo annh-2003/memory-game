@@ -1,4 +1,4 @@
-const CACHE_NAME = "memory-game-v2";
+const CACHE_NAME = "memory-game-v3";
 
 const ASSETS_TO_CACHE = [
   "./index.html",
