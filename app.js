@@ -88,8 +88,10 @@ class MemoryGame {
         this.difficulty = "easy";
         this.theme = "pokemon";
         this.themeData = new Map();
-        this.matchSound = new Audio("correct.mp3");
-        this.errorSound = new Audio("error.mp3");
+        // Audio (Web Audio API for iOS compatibility)
+        this.audioCtx = null;
+        this.matchBuffer = null;
+        this.errorBuffer = null;
         this.boardEl = document.getElementById("game-board");
         this.scoreEl = document.getElementById("score");
         this.flipsEl = document.getElementById("flips");
@@ -103,7 +105,39 @@ class MemoryGame {
         this.bestScoreEl.textContent = String(this.bestScore);
         this.restartBtn.addEventListener("click", () => this.resetGame());
         this.setupSettingsListeners();
+        this.initAudio();
         this.init();
+    }
+    initAudio() {
+        // Unlock AudioContext on first user touch (required by iOS)
+        const unlock = () => {
+            if (!this.audioCtx) {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (this.audioCtx.state === "suspended") {
+                this.audioCtx.resume();
+            }
+            this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
+            this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
+            document.removeEventListener("touchstart", unlock);
+            document.removeEventListener("click", unlock);
+        };
+        document.addEventListener("touchstart", unlock, { once: true });
+        document.addEventListener("click", unlock, { once: true });
+    }
+    loadAudioBuffer(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.audioCtx)
+                return null;
+            try {
+                const response = yield fetch(url);
+                const arrayBuffer = yield response.arrayBuffer();
+                return yield this.audioCtx.decodeAudioData(arrayBuffer);
+            }
+            catch (_a) {
+                return null;
+            }
+        });
     }
     setupSettingsListeners() {
         // Difficulty buttons
@@ -305,7 +339,7 @@ class MemoryGame {
         const firstCard = this.cards.find((c) => c.id === firstId);
         const secondCard = this.cards.find((c) => c.id === secondId);
         if (firstCard.value === secondCard.value) {
-            this.playSound(this.matchSound);
+            this.playSound(this.matchBuffer);
             firstCard.matched = true;
             secondCard.matched = true;
             this.matchedPairs++;
@@ -322,7 +356,7 @@ class MemoryGame {
             }
         }
         else {
-            this.playSound(this.errorSound);
+            this.playSound(this.errorBuffer);
             const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
             firstEl === null || firstEl === void 0 ? void 0 : firstEl.classList.add("shake");
@@ -360,9 +394,16 @@ class MemoryGame {
         const seconds = totalSeconds % 60;
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
-    playSound(audio) {
-        audio.currentTime = 0;
-        audio.play().catch(() => { });
+    playSound(buffer) {
+        if (!this.audioCtx || !buffer)
+            return;
+        if (this.audioCtx.state === "suspended") {
+            this.audioCtx.resume();
+        }
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.audioCtx.destination);
+        source.start(0);
     }
     gameWon() {
         this.stopTimer();

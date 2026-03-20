@@ -99,6 +99,11 @@ class MemoryGame {
   private theme: Theme = "pokemon";
   private themeData: Map<number, string> = new Map();
 
+  // Audio (Web Audio API for iOS compatibility)
+  private audioCtx: AudioContext | null = null;
+  private matchBuffer: AudioBuffer | null = null;
+  private errorBuffer: AudioBuffer | null = null;
+
   // DOM elements
   private boardEl: HTMLElement;
   private scoreEl: HTMLElement;
@@ -109,9 +114,6 @@ class MemoryGame {
   private restartBtn: HTMLElement;
   private timerEl: HTMLElement;
   private themeSelectEl: HTMLSelectElement;
-
-  private matchSound = new Audio("correct.mp3");
-  private errorSound = new Audio("error.mp3");
 
   constructor() {
     this.boardEl = document.getElementById("game-board")!;
@@ -129,7 +131,37 @@ class MemoryGame {
 
     this.restartBtn.addEventListener("click", () => this.resetGame());
     this.setupSettingsListeners();
+    this.initAudio();
     this.init();
+  }
+
+  private initAudio(): void {
+    // Unlock AudioContext on first user touch (required by iOS)
+    const unlock = (): void => {
+      if (!this.audioCtx) {
+        this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      if (this.audioCtx.state === "suspended") {
+        this.audioCtx.resume();
+      }
+      this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
+      this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
+      document.removeEventListener("touchstart", unlock);
+      document.removeEventListener("click", unlock);
+    };
+    document.addEventListener("touchstart", unlock, { once: true });
+    document.addEventListener("click", unlock, { once: true });
+  }
+
+  private async loadAudioBuffer(url: string): Promise<AudioBuffer | null> {
+    if (!this.audioCtx) return null;
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      return await this.audioCtx.decodeAudioData(arrayBuffer);
+    } catch {
+      return null;
+    }
   }
 
   private setupSettingsListeners(): void {
@@ -359,7 +391,7 @@ class MemoryGame {
     const secondCard = this.cards.find((c) => c.id === secondId)!;
 
     if (firstCard.value === secondCard.value) {
-      this.playSound(this.matchSound);
+      this.playSound(this.matchBuffer);
       firstCard.matched = true;
       secondCard.matched = true;
       this.matchedPairs++;
@@ -379,7 +411,7 @@ class MemoryGame {
         this.gameWon();
       }
     } else {
-      this.playSound(this.errorSound);
+      this.playSound(this.errorBuffer);
 
       const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
       const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
@@ -426,9 +458,15 @@ class MemoryGame {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
-  private playSound(audio: HTMLAudioElement): void {
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+  private playSound(buffer: AudioBuffer | null): void {
+    if (!this.audioCtx || !buffer) return;
+    if (this.audioCtx.state === "suspended") {
+      this.audioCtx.resume();
+    }
+    const source = this.audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.audioCtx.destination);
+    source.start(0);
   }
 
   private gameWon(): void {
