@@ -5,7 +5,7 @@
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #2a7b9b, #57c785, #eddd53);
   min-height: 100vh;
   display: flex;
@@ -26,7 +26,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
 }
 
 .sidebar {
@@ -44,16 +43,22 @@ body {
 .settings-panel {
   display: flex;
   justify-content: center;
-  gap: 30px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.settings-panel > .setting-group {
+  margin: 6px 15px;
 }
 
 .setting-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+}
+
+.setting-group > .setting-label {
+  margin-bottom: 6px;
 }
 
 .setting-label {
@@ -66,9 +71,12 @@ body {
 
 .setting-options {
   display: flex;
-  gap: 6px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.setting-options > .setting-btn {
+  margin: 3px;
 }
 
 .setting-btn {
@@ -80,6 +88,7 @@ body {
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   white-space: nowrap;
 }
@@ -100,12 +109,13 @@ body {
   color: #fff;
   border: 2px solid rgba(255, 255, 255, 0.3);
   padding: 8px 14px;
-  font-size: 0.95rem;
+  font-size: 16px; /* Prevents iOS zoom on focus */
   border-radius: 20px;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  appearance: none;
   -webkit-appearance: none;
+  appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
@@ -130,15 +140,19 @@ body {
 .score-board {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.score-board > .score-item {
+  margin: 4px 6px;
 }
 
 .score-item {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 8px 16px;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   min-width: 70px;
 }
@@ -160,9 +174,8 @@ body {
 }
 
 /* ===== Game Board =====
-   Use fluid grid: cards auto-size to fill available width.
-   --cols is set via JS for each difficulty level.
-   --gap controls spacing between cards.
+   --cols and --max-card are set via JS.
+   Use 1fr for iOS compatibility, constrain with max-width on board.
 */
 .game-board {
   --cols: 4;
@@ -170,9 +183,10 @@ body {
   --max-card: 110px;
 
   display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(0, var(--max-card)));
+  grid-template-columns: repeat(var(--cols), 1fr);
   gap: var(--gap);
   justify-content: center;
+  -webkit-perspective: 1000px;
   perspective: 1000px;
   width: 100%;
   max-width: calc(var(--cols) * var(--max-card) + (var(--cols) - 1) * var(--gap));
@@ -180,24 +194,28 @@ body {
 }
 
 /* ===== Card =====
-   aspect-ratio: 1 keeps cards square regardless of width.
-   Width is 100% of the grid cell (fluid).
+   padding-bottom trick as fallback for aspect-ratio on older iOS.
 */
 .card {
   position: relative;
   width: 100%;
+  padding-bottom: 100%; /* 1:1 square fallback */
   aspect-ratio: 1;
+  height: 0; /* Let padding-bottom control height */
   cursor: pointer;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
   transition: transform 0.5s ease;
   animation: cardAppear 0.3s ease backwards;
 }
 
 .card.flipped {
+  -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
 }
 
 .card.matched {
+  -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
   animation: matchBounce 0.5s ease;
 }
@@ -209,10 +227,10 @@ body {
 
 /* Match bounce */
 @keyframes matchBounce {
-  0% { transform: rotateY(180deg) scale(1); }
-  30% { transform: rotateY(180deg) scale(1.12); }
-  60% { transform: rotateY(180deg) scale(0.95); }
-  100% { transform: rotateY(180deg) scale(1); }
+  0% { -webkit-transform: rotateY(180deg) scale(1); transform: rotateY(180deg) scale(1); }
+  30% { -webkit-transform: rotateY(180deg) scale(1.12); transform: rotateY(180deg) scale(1.12); }
+  60% { -webkit-transform: rotateY(180deg) scale(0.95); transform: rotateY(180deg) scale(0.95); }
+  100% { -webkit-transform: rotateY(180deg) scale(1); transform: rotateY(180deg) scale(1); }
 }
 
 /* Mismatch shake */
@@ -221,29 +239,34 @@ body {
 }
 
 @keyframes cardShake {
-  0%, 100% { transform: rotateY(180deg) translateX(0); }
-  20% { transform: rotateY(180deg) translateX(-5px); }
-  40% { transform: rotateY(180deg) translateX(5px); }
-  60% { transform: rotateY(180deg) translateX(-3px); }
-  80% { transform: rotateY(180deg) translateX(3px); }
+  0%, 100% { -webkit-transform: rotateY(180deg) translateX(0); transform: rotateY(180deg) translateX(0); }
+  20% { -webkit-transform: rotateY(180deg) translateX(-5px); transform: rotateY(180deg) translateX(-5px); }
+  40% { -webkit-transform: rotateY(180deg) translateX(5px); transform: rotateY(180deg) translateX(5px); }
+  60% { -webkit-transform: rotateY(180deg) translateX(-3px); transform: rotateY(180deg) translateX(-3px); }
+  80% { -webkit-transform: rotateY(180deg) translateX(3px); transform: rotateY(180deg) translateX(3px); }
 }
 
 /* Card appear */
 @keyframes cardAppear {
   from {
     opacity: 0;
+    -webkit-transform: scale(0.5) rotateZ(10deg);
     transform: scale(0.5) rotateZ(10deg);
   }
   to {
     opacity: 1;
+    -webkit-transform: scale(1) rotateZ(0);
     transform: scale(1) rotateZ(0);
   }
 }
 
 .card-face {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   border-radius: 10px;
   display: flex;
@@ -264,6 +287,7 @@ body {
 /* Card Front */
 .card-front {
   background: #fff;
+  -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
   overflow: hidden;
   padding: 4%;
@@ -355,14 +379,6 @@ body {
     font-size: 2rem;
   }
 
-  .settings-panel {
-    gap: 16px;
-  }
-
-  .score-board {
-    gap: 8px;
-  }
-
   .score-item {
     padding: 6px 12px;
     min-width: 60px;
@@ -389,7 +405,6 @@ body {
   }
 
   .settings-panel {
-    gap: 10px;
     margin-bottom: 12px;
   }
 
@@ -399,7 +414,6 @@ body {
   }
 
   .score-board {
-    gap: 6px;
     margin-bottom: 14px;
   }
 
@@ -450,10 +464,7 @@ body {
   }
 }
 
-/* ===== Landscape on tablet / iPad =====
-   Khi xoay ngang: sidebar bên trái, game board bên phải
-   Điều kiện: landscape + chiều cao đủ nhỏ (thiết bị cầm tay, không phải desktop)
-*/
+/* ===== Landscape on tablet / iPad ===== */
 @media (orientation: landscape) and (max-height: 900px) {
   body {
     padding: 10px;
@@ -468,8 +479,11 @@ body {
   .game-layout {
     flex-direction: row;
     align-items: flex-start;
-    gap: 24px;
     justify-content: center;
+  }
+
+  .game-layout > .sidebar {
+    margin-right: 24px;
   }
 
   .sidebar {
@@ -488,15 +502,21 @@ body {
 
   .settings-panel {
     flex-direction: column;
-    gap: 10px;
     margin-bottom: 14px;
+  }
+
+  .settings-panel > .setting-group {
+    margin: 5px 0;
   }
 
   .score-board {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
     margin-bottom: 0;
+  }
+
+  .score-board > .score-item {
+    margin: 4px;
   }
 
   .score-item {
@@ -535,8 +555,11 @@ body {
   }
 
   .settings-panel {
-    gap: 6px;
     margin-bottom: 10px;
+  }
+
+  .settings-panel > .setting-group {
+    margin: 3px 0;
   }
 
   .setting-btn {
@@ -546,12 +569,12 @@ body {
 
   .theme-select {
     padding: 5px 10px;
-    font-size: 0.8rem;
+    font-size: 16px;
     min-width: 150px;
   }
 
-  .score-board {
-    gap: 4px;
+  .score-board > .score-item {
+    margin: 2px;
   }
 
   .score-item {
