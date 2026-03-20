@@ -39,6 +39,12 @@ body {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
+.version {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.7rem;
+  margin-bottom: 10px;
+}
+
 /* ===== Settings Panel ===== */
 .settings-panel {
   display: flex;

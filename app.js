@@ -88,9 +88,10 @@ class MemoryGame {
         this.difficulty = "easy";
         this.theme = "pokemon";
         this.themeData = new Map();
-        // Audio — pre-create and load elements, clone on each play
+        // Audio — unlock on first touch, then reuse
         this.matchAudio = new Audio("correct.mp3");
         this.errorAudio = new Audio("error.mp3");
+        this.audioUnlocked = false;
         this.boardEl = document.getElementById("game-board");
         this.scoreEl = document.getElementById("score");
         this.flipsEl = document.getElementById("flips");
@@ -104,7 +105,41 @@ class MemoryGame {
         this.bestScoreEl.textContent = String(this.bestScore);
         this.restartBtn.addEventListener("click", () => this.resetGame());
         this.setupSettingsListeners();
+        this.initAudio();
+        this.showVersion();
         this.init();
+    }
+    showVersion() {
+        const el = document.getElementById("version");
+        if (el)
+            el.textContent = `v${MemoryGame.VERSION}`;
+    }
+    initAudio() {
+        // Pre-load audio data
+        this.matchAudio.load();
+        this.errorAudio.load();
+        // iOS requires a user gesture to "unlock" audio playback.
+        // On first touch: play + immediately pause each audio element.
+        // After that, they can be replayed freely.
+        const unlock = () => {
+            if (this.audioUnlocked)
+                return;
+            this.audioUnlocked = true;
+            [this.matchAudio, this.errorAudio].forEach((audio) => {
+                audio.muted = true;
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.muted = false;
+                    audio.currentTime = 0;
+                }).catch(() => {
+                    audio.muted = false;
+                });
+            });
+            document.removeEventListener("touchstart", unlock);
+            document.removeEventListener("click", unlock);
+        };
+        document.addEventListener("touchstart", unlock);
+        document.addEventListener("click", unlock);
     }
     setupSettingsListeners() {
         // Difficulty buttons
@@ -302,9 +337,15 @@ class MemoryGame {
         cardEl === null || cardEl === void 0 ? void 0 : cardEl.classList.add("flipped");
         if (this.flippedCards.length === 2) {
             this.isLocked = true;
-            // Small delay so the browser renders the 2nd card flip animation
-            // before checkMatch processes the result
-            setTimeout(() => this.checkMatch(), 500);
+            // Wait for the 2nd card's flip transition to finish before checking
+            if (cardEl) {
+                cardEl.addEventListener("transitionend", () => {
+                    this.checkMatch();
+                }, { once: true });
+            }
+            else {
+                this.checkMatch();
+            }
         }
     }
     checkMatch() {
@@ -379,12 +420,10 @@ class MemoryGame {
         const seconds = totalSeconds % 60;
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
-    playSound(source) {
-        // Clone the pre-loaded audio element for each play.
-        // Cloning reuses the already-loaded audio data (no extra fetch),
-        // but creates a fresh playback instance (avoids iOS replay block).
-        const clone = source.cloneNode();
-        clone.play().catch(() => { });
+    playSound(audio) {
+        // Reuse the unlocked audio element — reset to start and play
+        audio.currentTime = 0;
+        audio.play().catch(() => { });
     }
     gameWon() {
         this.stopTimer();
@@ -440,6 +479,7 @@ class MemoryGame {
         });
     }
 }
+MemoryGame.VERSION = "1.0.0";
 document.addEventListener("DOMContentLoaded", () => {
     new MemoryGame();
 });
