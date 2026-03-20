@@ -99,12 +99,14 @@ class MemoryGame {
   private theme: Theme = "pokemon";
   private themeData: Map<number, string> = new Map();
 
-  // Audio — unlock on first touch, then reuse
-  private matchAudio: HTMLAudioElement = new Audio("correct.mp3");
-  private errorAudio: HTMLAudioElement = new Audio("error.mp3");
-  private audioUnlocked: boolean = false;
+  // Audio — pool of pre-unlocked elements for iOS compatibility
+  private matchPool: HTMLAudioElement[] = [];
+  private errorPool: HTMLAudioElement[] = [];
+  private matchPoolIndex: number = 0;
+  private errorPoolIndex: number = 0;
+  private static readonly AUDIO_POOL_SIZE = 4;
 
-  private static readonly VERSION = "1.0.0";
+  private static readonly VERSION = "1.1.0";
 
   // DOM elements
   private boardEl: HTMLElement;
@@ -144,18 +146,26 @@ class MemoryGame {
   }
 
   private initAudio(): void {
-    // Pre-load audio data
-    this.matchAudio.load();
-    this.errorAudio.load();
+    // Create a pool of Audio elements for each sound.
+    // iOS only allows each HTMLAudioElement to play once reliably,
+    // so we rotate through a pool of pre-created elements.
+    const createPool = (url: string): HTMLAudioElement[] => {
+      const pool: HTMLAudioElement[] = [];
+      for (let i = 0; i < MemoryGame.AUDIO_POOL_SIZE; i++) {
+        const audio = new Audio(url);
+        audio.load();
+        pool.push(audio);
+      }
+      return pool;
+    };
+
+    this.matchPool = createPool("correct.mp3");
+    this.errorPool = createPool("error.mp3");
 
     // iOS requires a user gesture to "unlock" audio playback.
-    // On first touch: play + immediately pause each audio element.
-    // After that, they can be replayed freely.
+    // On first touch: do a muted play+pause on all pool elements.
     const unlock = (): void => {
-      if (this.audioUnlocked) return;
-      this.audioUnlocked = true;
-
-      [this.matchAudio, this.errorAudio].forEach((audio) => {
+      [...this.matchPool, ...this.errorPool].forEach((audio) => {
         audio.muted = true;
         audio.play().then(() => {
           audio.pause();
@@ -165,7 +175,6 @@ class MemoryGame {
           audio.muted = false;
         });
       });
-
       document.removeEventListener("touchstart", unlock);
       document.removeEventListener("click", unlock);
     };
@@ -412,7 +421,7 @@ class MemoryGame {
     const secondCard = this.cards.find((c) => c.id === secondId)!;
 
     if (firstCard.value === secondCard.value) {
-      this.playSound(this.matchAudio);
+      this.playSoundFromPool(this.matchPool, "matchPoolIndex");
       firstCard.matched = true;
       secondCard.matched = true;
       this.matchedPairs++;
@@ -424,8 +433,18 @@ class MemoryGame {
       const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
       firstEl?.classList.add("matched");
       secondEl?.classList.add("matched");
-      if (firstEl) firstEl.style.animation = "matchBounce 0.5s ease";
-      if (secondEl) secondEl.style.animation = "matchBounce 0.5s ease";
+      if (firstEl) {
+        firstEl.style.animation = "matchBounce 0.5s ease";
+        firstEl.addEventListener("animationend", () => {
+          firstEl.style.animation = "none";
+        }, { once: true });
+      }
+      if (secondEl) {
+        secondEl.style.animation = "matchBounce 0.5s ease";
+        secondEl.addEventListener("animationend", () => {
+          secondEl.style.animation = "none";
+        }, { once: true });
+      }
 
       this.flippedCards = [];
       this.isLocked = false;
@@ -434,7 +453,7 @@ class MemoryGame {
         this.gameWon();
       }
     } else {
-      this.playSound(this.errorAudio);
+      this.playSoundFromPool(this.errorPool, "errorPoolIndex");
 
       const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`) as HTMLElement | null;
       const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
@@ -486,8 +505,9 @@ class MemoryGame {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
-  private playSound(audio: HTMLAudioElement): void {
-    // Reuse the unlocked audio element — reset to start and play
+  private playSoundFromPool(pool: HTMLAudioElement[], indexProp: "matchPoolIndex" | "errorPoolIndex"): void {
+    const audio = pool[this[indexProp]];
+    this[indexProp] = (this[indexProp] + 1) % pool.length;
     audio.currentTime = 0;
     audio.play().catch(() => {});
   }

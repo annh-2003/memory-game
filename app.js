@@ -88,10 +88,11 @@ class MemoryGame {
         this.difficulty = "easy";
         this.theme = "pokemon";
         this.themeData = new Map();
-        // Audio — unlock on first touch, then reuse
-        this.matchAudio = new Audio("correct.mp3");
-        this.errorAudio = new Audio("error.mp3");
-        this.audioUnlocked = false;
+        // Audio — pool of pre-unlocked elements for iOS compatibility
+        this.matchPool = [];
+        this.errorPool = [];
+        this.matchPoolIndex = 0;
+        this.errorPoolIndex = 0;
         this.boardEl = document.getElementById("game-board");
         this.scoreEl = document.getElementById("score");
         this.flipsEl = document.getElementById("flips");
@@ -115,17 +116,24 @@ class MemoryGame {
             el.textContent = `v${MemoryGame.VERSION}`;
     }
     initAudio() {
-        // Pre-load audio data
-        this.matchAudio.load();
-        this.errorAudio.load();
+        // Create a pool of Audio elements for each sound.
+        // iOS only allows each HTMLAudioElement to play once reliably,
+        // so we rotate through a pool of pre-created elements.
+        const createPool = (url) => {
+            const pool = [];
+            for (let i = 0; i < MemoryGame.AUDIO_POOL_SIZE; i++) {
+                const audio = new Audio(url);
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
+        this.matchPool = createPool("correct.mp3");
+        this.errorPool = createPool("error.mp3");
         // iOS requires a user gesture to "unlock" audio playback.
-        // On first touch: play + immediately pause each audio element.
-        // After that, they can be replayed freely.
+        // On first touch: do a muted play+pause on all pool elements.
         const unlock = () => {
-            if (this.audioUnlocked)
-                return;
-            this.audioUnlocked = true;
-            [this.matchAudio, this.errorAudio].forEach((audio) => {
+            [...this.matchPool, ...this.errorPool].forEach((audio) => {
                 audio.muted = true;
                 audio.play().then(() => {
                     audio.pause();
@@ -353,7 +361,7 @@ class MemoryGame {
         const firstCard = this.cards.find((c) => c.id === firstId);
         const secondCard = this.cards.find((c) => c.id === secondId);
         if (firstCard.value === secondCard.value) {
-            this.playSound(this.matchAudio);
+            this.playSoundFromPool(this.matchPool, "matchPoolIndex");
             firstCard.matched = true;
             secondCard.matched = true;
             this.matchedPairs++;
@@ -363,10 +371,18 @@ class MemoryGame {
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
             firstEl === null || firstEl === void 0 ? void 0 : firstEl.classList.add("matched");
             secondEl === null || secondEl === void 0 ? void 0 : secondEl.classList.add("matched");
-            if (firstEl)
+            if (firstEl) {
                 firstEl.style.animation = "matchBounce 0.5s ease";
-            if (secondEl)
+                firstEl.addEventListener("animationend", () => {
+                    firstEl.style.animation = "none";
+                }, { once: true });
+            }
+            if (secondEl) {
                 secondEl.style.animation = "matchBounce 0.5s ease";
+                secondEl.addEventListener("animationend", () => {
+                    secondEl.style.animation = "none";
+                }, { once: true });
+            }
             this.flippedCards = [];
             this.isLocked = false;
             if (this.matchedPairs === this.totalPairs) {
@@ -374,7 +390,7 @@ class MemoryGame {
             }
         }
         else {
-            this.playSound(this.errorAudio);
+            this.playSoundFromPool(this.errorPool, "errorPoolIndex");
             const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
             // Apply shake animation inline (avoids CSS animation conflicts on iOS)
@@ -420,8 +436,9 @@ class MemoryGame {
         const seconds = totalSeconds % 60;
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
-    playSound(audio) {
-        // Reuse the unlocked audio element — reset to start and play
+    playSoundFromPool(pool, indexProp) {
+        const audio = pool[this[indexProp]];
+        this[indexProp] = (this[indexProp] + 1) % pool.length;
         audio.currentTime = 0;
         audio.play().catch(() => { });
     }
@@ -479,7 +496,8 @@ class MemoryGame {
         });
     }
 }
-MemoryGame.VERSION = "1.0.0";
+MemoryGame.AUDIO_POOL_SIZE = 4;
+MemoryGame.VERSION = "1.1.0";
 document.addEventListener("DOMContentLoaded", () => {
     new MemoryGame();
 });
