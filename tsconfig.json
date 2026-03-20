@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "none",
+    "strict": true,
+    "sourceMap": false,
+    "lib": ["ES2017", "DOM"]
+  },
+  "include": ["app.ts"]
+}

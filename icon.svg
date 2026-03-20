@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a7b9b"/>
+      <stop offset="50%" stop-color="#57c785"/>
+      <stop offset="100%" stop-color="#eddd53"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
+  <!-- Card 1: frog -->
+  <rect x="70" y="70" width="165" height="165" rx="20" fill="#fff"/>
+  <text x="152" y="170" font-size="100" text-anchor="middle">🐸</text>
+  <!-- Card 2: ? -->
+  <rect x="277" y="70" width="165" height="165" rx="20" fill="#667eea"/>
+  <text x="359" y="175" font-size="90" text-anchor="middle" fill="#fff" font-weight="bold">?</text>
+  <!-- Card 3: ? -->
+  <rect x="70" y="277" width="165" height="165" rx="20" fill="#667eea"/>
+  <text x="152" y="382" font-size="90" text-anchor="middle" fill="#fff" font-weight="bold">?</text>
+  <!-- Card 4: frog -->
+  <rect x="277" y="277" width="165" height="165" rx="20" fill="#fff"/>
+  <text x="359" y="377" font-size="100" text-anchor="middle">🐸</text>
+</svg>

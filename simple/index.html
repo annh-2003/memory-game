@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory Game - Simple</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">Memory Game</h1>
+
+      <div class="score-board">
+        <div class="score-item">
+          <span class="score-label">Score</span>
+          <span id="score" class="score-value">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Flips</span>
+          <span id="flips" class="score-value">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Best Score</span>
+          <span id="best-score" class="score-value">0</span>
+        </div>
+      </div>
+
+      <div id="game-board" class="game-board"></div>
+
+      <div id="win-message" class="win-message hidden">
+        <h2>You Win!</h2>
+        <p>Congratulations! You found all pairs!</p>
+        <button id="restart-btn" class="restart-btn">Play Again</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trò Chơi Trí Nhớ</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#2a7b9b" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">Trò Chơi Trí Nhớ</h1>
+
+      <!-- Bảng cài đặt -->
+      <div class="settings-panel">
+        <div class="setting-group">
+          <label class="setting-label">Độ khó</label>
+          <div class="setting-options">
+            <button class="setting-btn active" data-difficulty="easy">Dễ 4x4</button>
+            <button class="setting-btn" data-difficulty="medium">Trung bình 6x6</button>
+            <button class="setting-btn" data-difficulty="hard">Khó 8x8</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Chủ đề</label>
+          <select id="theme-select" class="theme-select">
+            <option value="pokemon">🎮 Pokemon</option>
+            <option value="emoji">😀 Biểu cảm</option>
+            <option value="animal">🐾 Động vật</option>
+            <option value="fruit">🍎 Trái cây</option>
+            <option value="vehicle">🚗 Xe cộ</option>
+            <option value="snack">🍕 Đồ ăn vặt</option>
+            <option value="sport">⚽ Thể thao</option>
+            <option value="face">😜 Mặt cười</option>
+            <option value="nature">🌸 Thiên nhiên</option>
+            <option value="music">🎸 Âm nhạc</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bảng điểm -->
+      <div class="score-board">
+        <div class="score-item">
+          <span class="score-label">Điểm</span>
+          <span id="score" class="score-value">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Lượt lật</span>
+          <span id="flips" class="score-value">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Thời gian</span>
+          <span id="timer" class="score-value">0:00</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Kỷ lục</span>
+          <span id="best-score" class="score-value">0</span>
+        </div>
+      </div>
+
+      <div id="game-board" class="game-board"></div>
+
+      <div id="win-message" class="win-message hidden">
+        <h2>Chiến Thắng!</h2>
+        <p id="win-details">Chúc mừng bạn!</p>
+        <button id="restart-btn" class="restart-btn">Chơi lại</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js");
+      }
+    </script>
+  </body>
+</html>

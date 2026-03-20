@@ -1,0 +1,439 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #2a7b9b, #57c785, #eddd53);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 10px;
+}
+
+.container {
+  text-align: center;
+  padding: 10px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.title {
+  color: #fff;
+  font-size: 2.5rem;
+  margin-bottom: 14px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Settings Panel ===== */
+.settings-panel {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.setting-label {
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.setting-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.setting-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 2px solid transparent;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.setting-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.setting-btn.active {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+}
+
+/* Theme dropdown */
+.theme-select {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  border-radius: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px;
+  min-width: 180px;
+}
+
+.theme-select:focus {
+  outline: none;
+  border-color: #fff;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.theme-select option {
+  background: #2a7b9b;
+  color: #fff;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+/* ===== Score Board ===== */
+.score-board {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.score-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 16px;
+  backdrop-filter: blur(10px);
+  min-width: 70px;
+}
+
+.score-label {
+  display: block;
+  color: #d6ec0e;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.score-value {
+  display: block;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* ===== Game Board =====
+   Use fluid grid: cards auto-size to fill available width.
+   --cols is set via JS for each difficulty level.
+   --gap controls spacing between cards.
+*/
+.game-board {
+  --cols: 4;
+  --gap: 8px;
+  --max-card: 110px;
+
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, var(--max-card)));
+  gap: var(--gap);
+  justify-content: center;
+  perspective: 1000px;
+  width: 100%;
+  max-width: calc(var(--cols) * var(--max-card) + (var(--cols) - 1) * var(--gap));
+  margin: 0 auto;
+}
+
+/* ===== Card =====
+   aspect-ratio: 1 keeps cards square regardless of width.
+   Width is 100% of the grid cell (fluid).
+*/
+.card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+  animation: cardAppear 0.3s ease backwards;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+.card.matched {
+  transform: rotateY(180deg);
+  animation: matchBounce 0.5s ease;
+}
+
+.card.matched .card-front {
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+  border-color: #4caf50;
+}
+
+/* Match bounce */
+@keyframes matchBounce {
+  0% { transform: rotateY(180deg) scale(1); }
+  30% { transform: rotateY(180deg) scale(1.12); }
+  60% { transform: rotateY(180deg) scale(0.95); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+/* Mismatch shake */
+.card.shake {
+  animation: cardShake 0.4s ease;
+}
+
+@keyframes cardShake {
+  0%, 100% { transform: rotateY(180deg) translateX(0); }
+  20% { transform: rotateY(180deg) translateX(-5px); }
+  40% { transform: rotateY(180deg) translateX(5px); }
+  60% { transform: rotateY(180deg) translateX(-3px); }
+  80% { transform: rotateY(180deg) translateX(3px); }
+}
+
+/* Card appear */
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotateZ(10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotateZ(0);
+  }
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(241, 237, 30, 0.2);
+}
+
+/* Card Back */
+.card-back {
+  background: linear-gradient(145deg, #667eea, #5ec3e2);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(227, 200, 200, 0.3);
+}
+
+/* Card Front */
+.card-front {
+  background: #fff;
+  transform: rotateY(180deg);
+  overflow: hidden;
+  padding: 4%;
+}
+
+.card-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Emoji theme */
+.card-front .card-emoji {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+/* Loading state */
+.card.loading .card-back {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== Win Message ===== */
+.win-message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.5s ease;
+  padding: 20px;
+}
+
+.win-message h2 {
+  color: #4caf50;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.win-message p {
+  color: #fff;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.restart-btn {
+  background: linear-gradient(145deg, #667eea, #764ba2);
+  color: #fff;
+  border: none;
+  padding: 14px 40px;
+  font-size: 1.1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.restart-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== Responsive ===== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .settings-panel {
+    gap: 16px;
+  }
+
+  .score-board {
+    gap: 8px;
+  }
+
+  .score-item {
+    padding: 6px 12px;
+    min-width: 60px;
+  }
+
+  .score-value {
+    font-size: 1.3rem;
+  }
+
+  .card-front .card-emoji {
+    font-size: 3.2rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  body {
+    padding: 10px 6px;
+  }
+
+  .title {
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+  }
+
+  .settings-panel {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .setting-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .score-board {
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .score-item {
+    padding: 5px 10px;
+    min-width: 55px;
+  }
+
+  .score-label {
+    font-size: 0.65rem;
+  }
+
+  .score-value {
+    font-size: 1.1rem;
+  }
+
+  .game-board {
+    --gap: 4px;
+  }
+
+  .card-back {
+    font-size: 1.4rem;
+  }
+
+  .card-front {
+    padding: 3px;
+  }
+
+  .card-front .card-emoji {
+    font-size: 2.2rem;
+  }
+
+  .card-face {
+    border-radius: 6px;
+  }
+
+  .win-message h2 {
+    font-size: 2rem;
+  }
+
+  .win-message p {
+    font-size: 0.95rem;
+  }
+
+  .restart-btn {
+    padding: 12px 30px;
+    font-size: 1rem;
+  }
+}
