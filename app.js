@@ -109,21 +109,16 @@ class MemoryGame {
         this.init();
     }
     initAudio() {
-        // Unlock AudioContext on first user touch (required by iOS)
-        const unlock = () => {
-            if (!this.audioCtx) {
-                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (this.audioCtx.state === "suspended") {
-                this.audioCtx.resume();
-            }
-            this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
-            this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
-            document.removeEventListener("touchstart", unlock);
-            document.removeEventListener("click", unlock);
-        };
-        document.addEventListener("touchstart", unlock, { once: true });
-        document.addEventListener("click", unlock, { once: true });
+        // Create AudioContext eagerly (allowed on all browsers)
+        try {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        catch (_a) {
+            return;
+        }
+        // Pre-load audio buffers immediately
+        this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
+        this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
     }
     loadAudioBuffer(url) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -308,6 +303,10 @@ class MemoryGame {
           </div>
         `;
             }
+            // Clear animation after it completes to prevent conflicts with flip/shake
+            cardEl.addEventListener("animationend", () => {
+                cardEl.style.animation = "none";
+            }, { once: true });
             cardEl.addEventListener("click", () => this.flipCard(card.id));
             this.boardEl.appendChild(cardEl);
         });
@@ -349,6 +348,10 @@ class MemoryGame {
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
             firstEl === null || firstEl === void 0 ? void 0 : firstEl.classList.add("matched");
             secondEl === null || secondEl === void 0 ? void 0 : secondEl.classList.add("matched");
+            if (firstEl)
+                firstEl.style.animation = "matchBounce 0.5s ease";
+            if (secondEl)
+                secondEl.style.animation = "matchBounce 0.5s ease";
             this.flippedCards = [];
             this.isLocked = false;
             if (this.matchedPairs === this.totalPairs) {
@@ -359,13 +362,21 @@ class MemoryGame {
             this.playSound(this.errorBuffer);
             const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
-            firstEl === null || firstEl === void 0 ? void 0 : firstEl.classList.add("shake");
-            secondEl === null || secondEl === void 0 ? void 0 : secondEl.classList.add("shake");
+            // Apply shake animation inline (avoids CSS animation conflicts on iOS)
+            if (firstEl)
+                firstEl.style.animation = "cardShake 0.4s ease";
+            if (secondEl)
+                secondEl.style.animation = "cardShake 0.4s ease";
+            // After delay: clear animation, then flip back
             setTimeout(() => {
+                if (firstEl)
+                    firstEl.style.animation = "none";
+                if (secondEl)
+                    secondEl.style.animation = "none";
                 firstCard.flipped = false;
                 secondCard.flipped = false;
-                firstEl === null || firstEl === void 0 ? void 0 : firstEl.classList.remove("flipped", "shake");
-                secondEl === null || secondEl === void 0 ? void 0 : secondEl.classList.remove("flipped", "shake");
+                firstEl === null || firstEl === void 0 ? void 0 : firstEl.classList.remove("flipped");
+                secondEl === null || secondEl === void 0 ? void 0 : secondEl.classList.remove("flipped");
                 this.flippedCards = [];
                 this.isLocked = false;
             }, 1000);
@@ -397,13 +408,19 @@ class MemoryGame {
     playSound(buffer) {
         if (!this.audioCtx || !buffer)
             return;
+        // iOS requires resume() inside a user gesture (click/touch handler)
+        const play = () => {
+            const source = this.audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(this.audioCtx.destination);
+            source.start(0);
+        };
         if (this.audioCtx.state === "suspended") {
-            this.audioCtx.resume();
+            this.audioCtx.resume().then(play);
         }
-        const source = this.audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(this.audioCtx.destination);
-        source.start(0);
+        else {
+            play();
+        }
     }
     gameWon() {
         this.stopTimer();

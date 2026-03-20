@@ -136,21 +136,16 @@ class MemoryGame {
   }
 
   private initAudio(): void {
-    // Unlock AudioContext on first user touch (required by iOS)
-    const unlock = (): void => {
-      if (!this.audioCtx) {
-        this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      if (this.audioCtx.state === "suspended") {
-        this.audioCtx.resume();
-      }
-      this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
-      this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
-      document.removeEventListener("touchstart", unlock);
-      document.removeEventListener("click", unlock);
-    };
-    document.addEventListener("touchstart", unlock, { once: true });
-    document.addEventListener("click", unlock, { once: true });
+    // Create AudioContext eagerly (allowed on all browsers)
+    try {
+      this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch {
+      return;
+    }
+
+    // Pre-load audio buffers immediately
+    this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
+    this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
   }
 
   private async loadAudioBuffer(url: string): Promise<AudioBuffer | null> {
@@ -354,6 +349,11 @@ class MemoryGame {
         `;
       }
 
+      // Clear animation after it completes to prevent conflicts with flip/shake
+      cardEl.addEventListener("animationend", () => {
+        cardEl.style.animation = "none";
+      }, { once: true });
+
       cardEl.addEventListener("click", () => this.flipCard(card.id));
       this.boardEl.appendChild(cardEl);
     });
@@ -399,10 +399,12 @@ class MemoryGame {
       this.score = this.calculateScore();
       this.scoreEl.textContent = String(this.score);
 
-      const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
-      const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
+      const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`) as HTMLElement | null;
+      const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
       firstEl?.classList.add("matched");
       secondEl?.classList.add("matched");
+      if (firstEl) firstEl.style.animation = "matchBounce 0.5s ease";
+      if (secondEl) secondEl.style.animation = "matchBounce 0.5s ease";
 
       this.flippedCards = [];
       this.isLocked = false;
@@ -413,17 +415,22 @@ class MemoryGame {
     } else {
       this.playSound(this.errorBuffer);
 
-      const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
-      const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
-      firstEl?.classList.add("shake");
-      secondEl?.classList.add("shake");
+      const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`) as HTMLElement | null;
+      const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
 
+      // Apply shake animation inline (avoids CSS animation conflicts on iOS)
+      if (firstEl) firstEl.style.animation = "cardShake 0.4s ease";
+      if (secondEl) secondEl.style.animation = "cardShake 0.4s ease";
+
+      // After delay: clear animation, then flip back
       setTimeout(() => {
+        if (firstEl) firstEl.style.animation = "none";
+        if (secondEl) secondEl.style.animation = "none";
+
         firstCard.flipped = false;
         secondCard.flipped = false;
-
-        firstEl?.classList.remove("flipped", "shake");
-        secondEl?.classList.remove("flipped", "shake");
+        firstEl?.classList.remove("flipped");
+        secondEl?.classList.remove("flipped");
 
         this.flippedCards = [];
         this.isLocked = false;
@@ -460,13 +467,18 @@ class MemoryGame {
 
   private playSound(buffer: AudioBuffer | null): void {
     if (!this.audioCtx || !buffer) return;
+    // iOS requires resume() inside a user gesture (click/touch handler)
+    const play = (): void => {
+      const source = this.audioCtx!.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.audioCtx!.destination);
+      source.start(0);
+    };
     if (this.audioCtx.state === "suspended") {
-      this.audioCtx.resume();
+      this.audioCtx.resume().then(play);
+    } else {
+      play();
     }
-    const source = this.audioCtx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(this.audioCtx.destination);
-    source.start(0);
   }
 
   private gameWon(): void {

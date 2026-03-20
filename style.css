@@ -217,7 +217,6 @@ body {
 .card.matched {
   -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
-  animation: matchBounce 0.5s ease;
 }
 
 .card.matched .card-front {
@@ -233,11 +232,7 @@ body {
   100% { -webkit-transform: rotateY(180deg) scale(1); transform: rotateY(180deg) scale(1); }
 }
 
-/* Mismatch shake */
-.card.shake {
-  animation: cardShake 0.4s ease;
-}
-
+/* Mismatch shake (applied via JS inline style to avoid animation conflicts) */
 @keyframes cardShake {
   0%, 100% { -webkit-transform: rotateY(180deg) translateX(0); transform: rotateY(180deg) translateX(0); }
   20% { -webkit-transform: rotateY(180deg) translateX(-5px); transform: rotateY(180deg) translateX(-5px); }
