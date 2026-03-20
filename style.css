@@ -18,7 +18,19 @@ body {
   text-align: center;
   padding: 10px;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
+}
+
+/* Default: vertical layout */
+.game-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.sidebar {
+  width: 100%;
 }
 
 .title {
@@ -435,5 +447,130 @@ body {
   .restart-btn {
     padding: 12px 30px;
     font-size: 1rem;
+  }
+}
+
+/* ===== Landscape on tablet / iPad =====
+   Khi xoay ngang: sidebar bên trái, game board bên phải
+   Điều kiện: landscape + chiều cao đủ nhỏ (thiết bị cầm tay, không phải desktop)
+*/
+@media (orientation: landscape) and (max-height: 900px) {
+  body {
+    padding: 10px;
+    align-items: center;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .game-layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  .sidebar {
+    width: auto;
+    min-width: 220px;
+    max-width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 10px;
+  }
+
+  .title {
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+  }
+
+  .settings-panel {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .score-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .score-item {
+    padding: 6px 10px;
+    min-width: unset;
+  }
+
+  .score-label {
+    font-size: 0.7rem;
+  }
+
+  .score-value {
+    font-size: 1.2rem;
+  }
+
+  .game-board {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-front .card-emoji {
+    font-size: 3rem;
+  }
+}
+
+/* Landscape on phone (very short height) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .sidebar {
+    min-width: 180px;
+    max-width: 220px;
+  }
+
+  .settings-panel {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .setting-btn {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+
+  .theme-select {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    min-width: 150px;
+  }
+
+  .score-board {
+    gap: 4px;
+  }
+
+  .score-item {
+    padding: 4px 8px;
+  }
+
+  .score-label {
+    font-size: 0.6rem;
+  }
+
+  .score-value {
+    font-size: 1rem;
+  }
+
+  .card-front .card-emoji {
+    font-size: 2rem;
+  }
+
+  .card-back {
+    font-size: 1.2rem;
   }
 }
