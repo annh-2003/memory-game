@@ -99,9 +99,9 @@ class MemoryGame {
   private theme: Theme = "pokemon";
   private themeData: Map<number, string> = new Map();
 
-  // Audio
-  private readonly matchSoundUrl = "correct.mp3";
-  private readonly errorSoundUrl = "error.mp3";
+  // Audio — pre-create and load elements, clone on each play
+  private matchAudio: HTMLAudioElement = new Audio("correct.mp3");
+  private errorAudio: HTMLAudioElement = new Audio("error.mp3");
 
   // DOM elements
   private boardEl: HTMLElement;
@@ -355,7 +355,9 @@ class MemoryGame {
 
     if (this.flippedCards.length === 2) {
       this.isLocked = true;
-      this.checkMatch();
+      // Small delay so the browser renders the 2nd card flip animation
+      // before checkMatch processes the result
+      setTimeout(() => this.checkMatch(), 500);
     }
   }
 
@@ -365,7 +367,7 @@ class MemoryGame {
     const secondCard = this.cards.find((c) => c.id === secondId)!;
 
     if (firstCard.value === secondCard.value) {
-      this.playSound(this.matchSoundUrl);
+      this.playSound(this.matchAudio);
       firstCard.matched = true;
       secondCard.matched = true;
       this.matchedPairs++;
@@ -387,7 +389,7 @@ class MemoryGame {
         this.gameWon();
       }
     } else {
-      this.playSound(this.errorSoundUrl);
+      this.playSound(this.errorAudio);
 
       const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`) as HTMLElement | null;
       const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
@@ -439,13 +441,12 @@ class MemoryGame {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
-  private playSound(url: string): void {
-    // Create a fresh Audio element each time.
-    // This works on all platforms including iOS because:
-    // - It's always called inside a click handler (user gesture)
-    // - A new element avoids iOS replay blocking issues
-    const audio = new Audio(url);
-    audio.play().catch(() => {});
+  private playSound(source: HTMLAudioElement): void {
+    // Clone the pre-loaded audio element for each play.
+    // Cloning reuses the already-loaded audio data (no extra fetch),
+    // but creates a fresh playback instance (avoids iOS replay block).
+    const clone = source.cloneNode() as HTMLAudioElement;
+    clone.play().catch(() => {});
   }
 
   private gameWon(): void {

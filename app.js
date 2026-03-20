@@ -88,9 +88,9 @@ class MemoryGame {
         this.difficulty = "easy";
         this.theme = "pokemon";
         this.themeData = new Map();
-        // Audio
-        this.matchSoundUrl = "correct.mp3";
-        this.errorSoundUrl = "error.mp3";
+        // Audio — pre-create and load elements, clone on each play
+        this.matchAudio = new Audio("correct.mp3");
+        this.errorAudio = new Audio("error.mp3");
         this.boardEl = document.getElementById("game-board");
         this.scoreEl = document.getElementById("score");
         this.flipsEl = document.getElementById("flips");
@@ -302,7 +302,9 @@ class MemoryGame {
         cardEl === null || cardEl === void 0 ? void 0 : cardEl.classList.add("flipped");
         if (this.flippedCards.length === 2) {
             this.isLocked = true;
-            this.checkMatch();
+            // Small delay so the browser renders the 2nd card flip animation
+            // before checkMatch processes the result
+            setTimeout(() => this.checkMatch(), 500);
         }
     }
     checkMatch() {
@@ -310,7 +312,7 @@ class MemoryGame {
         const firstCard = this.cards.find((c) => c.id === firstId);
         const secondCard = this.cards.find((c) => c.id === secondId);
         if (firstCard.value === secondCard.value) {
-            this.playSound(this.matchSoundUrl);
+            this.playSound(this.matchAudio);
             firstCard.matched = true;
             secondCard.matched = true;
             this.matchedPairs++;
@@ -331,7 +333,7 @@ class MemoryGame {
             }
         }
         else {
-            this.playSound(this.errorSoundUrl);
+            this.playSound(this.errorAudio);
             const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
             // Apply shake animation inline (avoids CSS animation conflicts on iOS)
@@ -377,13 +379,12 @@ class MemoryGame {
         const seconds = totalSeconds % 60;
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
-    playSound(url) {
-        // Create a fresh Audio element each time.
-        // This works on all platforms including iOS because:
-        // - It's always called inside a click handler (user gesture)
-        // - A new element avoids iOS replay blocking issues
-        const audio = new Audio(url);
-        audio.play().catch(() => { });
+    playSound(source) {
+        // Clone the pre-loaded audio element for each play.
+        // Cloning reuses the already-loaded audio data (no extra fetch),
+        // but creates a fresh playback instance (avoids iOS replay block).
+        const clone = source.cloneNode();
+        clone.play().catch(() => { });
     }
     gameWon() {
         this.stopTimer();
