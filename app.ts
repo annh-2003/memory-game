@@ -99,10 +99,9 @@ class MemoryGame {
   private theme: Theme = "pokemon";
   private themeData: Map<number, string> = new Map();
 
-  // Audio (Web Audio API for iOS compatibility)
-  private audioCtx: AudioContext | null = null;
-  private matchBuffer: AudioBuffer | null = null;
-  private errorBuffer: AudioBuffer | null = null;
+  // Audio
+  private readonly matchSoundUrl = "correct.mp3";
+  private readonly errorSoundUrl = "error.mp3";
 
   // DOM elements
   private boardEl: HTMLElement;
@@ -131,32 +130,7 @@ class MemoryGame {
 
     this.restartBtn.addEventListener("click", () => this.resetGame());
     this.setupSettingsListeners();
-    this.initAudio();
     this.init();
-  }
-
-  private initAudio(): void {
-    // Create AudioContext eagerly (allowed on all browsers)
-    try {
-      this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    } catch {
-      return;
-    }
-
-    // Pre-load audio buffers immediately
-    this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
-    this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
-  }
-
-  private async loadAudioBuffer(url: string): Promise<AudioBuffer | null> {
-    if (!this.audioCtx) return null;
-    try {
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      return await this.audioCtx.decodeAudioData(arrayBuffer);
-    } catch {
-      return null;
-    }
   }
 
   private setupSettingsListeners(): void {
@@ -391,7 +365,7 @@ class MemoryGame {
     const secondCard = this.cards.find((c) => c.id === secondId)!;
 
     if (firstCard.value === secondCard.value) {
-      this.playSound(this.matchBuffer);
+      this.playSound(this.matchSoundUrl);
       firstCard.matched = true;
       secondCard.matched = true;
       this.matchedPairs++;
@@ -413,7 +387,7 @@ class MemoryGame {
         this.gameWon();
       }
     } else {
-      this.playSound(this.errorBuffer);
+      this.playSound(this.errorSoundUrl);
 
       const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`) as HTMLElement | null;
       const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
@@ -465,20 +439,13 @@ class MemoryGame {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
-  private playSound(buffer: AudioBuffer | null): void {
-    if (!this.audioCtx || !buffer) return;
-    // iOS requires resume() inside a user gesture (click/touch handler)
-    const play = (): void => {
-      const source = this.audioCtx!.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.audioCtx!.destination);
-      source.start(0);
-    };
-    if (this.audioCtx.state === "suspended") {
-      this.audioCtx.resume().then(play);
-    } else {
-      play();
-    }
+  private playSound(url: string): void {
+    // Create a fresh Audio element each time.
+    // This works on all platforms including iOS because:
+    // - It's always called inside a click handler (user gesture)
+    // - A new element avoids iOS replay blocking issues
+    const audio = new Audio(url);
+    audio.play().catch(() => {});
   }
 
   private gameWon(): void {

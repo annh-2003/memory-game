@@ -88,10 +88,9 @@ class MemoryGame {
         this.difficulty = "easy";
         this.theme = "pokemon";
         this.themeData = new Map();
-        // Audio (Web Audio API for iOS compatibility)
-        this.audioCtx = null;
-        this.matchBuffer = null;
-        this.errorBuffer = null;
+        // Audio
+        this.matchSoundUrl = "correct.mp3";
+        this.errorSoundUrl = "error.mp3";
         this.boardEl = document.getElementById("game-board");
         this.scoreEl = document.getElementById("score");
         this.flipsEl = document.getElementById("flips");
@@ -105,34 +104,7 @@ class MemoryGame {
         this.bestScoreEl.textContent = String(this.bestScore);
         this.restartBtn.addEventListener("click", () => this.resetGame());
         this.setupSettingsListeners();
-        this.initAudio();
         this.init();
-    }
-    initAudio() {
-        // Create AudioContext eagerly (allowed on all browsers)
-        try {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        catch (_a) {
-            return;
-        }
-        // Pre-load audio buffers immediately
-        this.loadAudioBuffer("correct.mp3").then((buf) => { this.matchBuffer = buf; });
-        this.loadAudioBuffer("error.mp3").then((buf) => { this.errorBuffer = buf; });
-    }
-    loadAudioBuffer(url) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.audioCtx)
-                return null;
-            try {
-                const response = yield fetch(url);
-                const arrayBuffer = yield response.arrayBuffer();
-                return yield this.audioCtx.decodeAudioData(arrayBuffer);
-            }
-            catch (_a) {
-                return null;
-            }
-        });
     }
     setupSettingsListeners() {
         // Difficulty buttons
@@ -338,7 +310,7 @@ class MemoryGame {
         const firstCard = this.cards.find((c) => c.id === firstId);
         const secondCard = this.cards.find((c) => c.id === secondId);
         if (firstCard.value === secondCard.value) {
-            this.playSound(this.matchBuffer);
+            this.playSound(this.matchSoundUrl);
             firstCard.matched = true;
             secondCard.matched = true;
             this.matchedPairs++;
@@ -359,7 +331,7 @@ class MemoryGame {
             }
         }
         else {
-            this.playSound(this.errorBuffer);
+            this.playSound(this.errorSoundUrl);
             const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`);
             const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`);
             // Apply shake animation inline (avoids CSS animation conflicts on iOS)
@@ -405,22 +377,13 @@ class MemoryGame {
         const seconds = totalSeconds % 60;
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
-    playSound(buffer) {
-        if (!this.audioCtx || !buffer)
-            return;
-        // iOS requires resume() inside a user gesture (click/touch handler)
-        const play = () => {
-            const source = this.audioCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(this.audioCtx.destination);
-            source.start(0);
-        };
-        if (this.audioCtx.state === "suspended") {
-            this.audioCtx.resume().then(play);
-        }
-        else {
-            play();
-        }
+    playSound(url) {
+        // Create a fresh Audio element each time.
+        // This works on all platforms including iOS because:
+        // - It's always called inside a click handler (user gesture)
+        // - A new element avoids iOS replay blocking issues
+        const audio = new Audio(url);
+        audio.play().catch(() => { });
     }
     gameWon() {
         this.stopTimer();
