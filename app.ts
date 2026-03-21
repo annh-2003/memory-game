@@ -21,61 +21,61 @@ const DIFFICULTY_MAP: Record<Difficulty, DifficultyConfig> = {
   hard: { cols: 8, rows: 8, pairs: 32, maxCardSize: 75 },
 };
 
-// All emojis are Unicode ≤ 11.0 (iOS 12.1+) for maximum compatibility
+// All emojis are Unicode ≤ 10.0 (iOS 11.1+) for maximum compatibility
 const THEME_POOLS: Record<Exclude<Theme, "pokemon">, string[]> = {
   emoji: [
+    "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣",
+    "😊", "😇", "🙂", "😉", "😍", "😘", "😜", "🤪",
+    "😎", "🤩", "🤗", "🤔", "🤫", "🤭", "😱", "😨",
+    "😴", "🤑", "😷", "🤯", "🤠", "😈", "👻", "💀",
+  ],
+  animal: [
     "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼",
     "🐸", "🐵", "🐔", "🐧", "🐦", "🐤", "🦄", "🐝",
     "🐛", "🦋", "🐌", "🐞", "🐙", "🦀", "🐡", "🐠",
     "🐟", "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🦁",
   ],
-  animal: [
-    "🐕", "🐈", "🐎", "🐄", "🐖", "🐑", "🐐", "🦌",
-    "🐘", "🦏", "🦛", "🐪", "🦒", "🦘", "🐺", "🐃",
-    "🐫", "🦧", "🐆", "🐅", "🦡", "🐨", "🦙", "🐇",
-    "🐿️", "🦔", "🐓", "🦃", "🦚", "🦜", "🦢", "🦩",
-  ],
   fruit: [
     "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓",
-    "🍏", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝",
-    "🍅", "🥑", "🌽", "🥕", "🍆", "🥦", "🥒", "🌶️",
-    "🥬", "🍄", "🥜", "🌰", "🍠", "🥔", "🧄", "🧅",
+    "🍏", "🍈", "🍒", "🍑", "🍍", "🥝", "🥥", "🥑",
+    "🍅", "🌽", "🥕", "🍆", "🥦", "🥒", "🍄", "🥜",
+    "🌰", "🍠", "🥔", "🌶️", "🥒", "🥗", "🥐", "🥖",
   ],
   vehicle: [
     "🚗", "🚕", "🚌", "🚑", "🚒", "🏎️", "🚓", "🚜",
     "🚂", "🚙", "🚁", "🛸", "🚀", "🛵", "🚲", "⛵",
-    "🛩️", "🚢", "🏍️", "🚐", "🚎", "🚑", "🛶", "🚠",
+    "🛩️", "🚢", "🏍️", "🚐", "🚎", "🚛", "🛶", "🚠",
     "🚃", "🚈", "🚇", "🚊", "🚆", "🚋", "🛫", "🛬",
   ],
   snack: [
-    "🍕", "🍔", "🍟", "🌭", "🍿", "🧁", "🍩", "🍪",
-    "🎂", "🍫", "🍬", "🍭", "🍰", "🥞", "🥨", "🥯",
-    "🧀", "🌮", "🥪", "🥐", "🍡", "🍦", "🍝", "🥧",
-    "🥤", "🥛", "🍼", "🍜", "🍣", "🍱", "🥙", "🍘",
+    "🍕", "🍔", "🍟", "🌭", "🍿", "🍩", "🍪", "🎂",
+    "🍫", "🍬", "🍭", "🍰", "🥞", "🥨", "🧀", "🌮",
+    "🥪", "🥐", "🍡", "🍦", "🍝", "🥤", "🥛", "🍼",
+    "🍜", "🍣", "🍱", "🍘", "🍙", "🍚", "🍛", "🍢",
   ],
   sport: [
     "⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🏉", "🎱",
     "🏓", "🏸", "🥊", "🥋", "🏹", "🏄", "🏇", "⛷️",
-    "🏂", "🎳", "🏋️", "🤸", "🤾", "🚴", "🧗", "🏊",
-    "⛹️", "🤺", "🏌️", "🤽", "🎯", "🛹", "🏒", "🥅",
+    "🏂", "🎳", "🏋️", "🤸", "🤾", "🚴", "🏊", "⛹️",
+    "🤺", "🏌️", "🤽", "🎯", "🏒", "🥅", "🎿", "🤼",
   ],
   face: [
-    "😀", "😂", "🥰", "😎", "🤩", "😜", "🤗", "😇",
-    "🥳", "😱", "🤯", "😴", "🤑", "👻", "🤖", "👽",
-    "💀", "🎃", "😈", "🦸", "🧚", "🧜", "🧛", "🧞",
-    "🧙", "🤡", "👾", "💩", "🙈", "🙉", "🙊", "😻",
+    "😀", "😂", "😎", "🤩", "😜", "🤗", "😇", "😱",
+    "🤯", "😴", "🤑", "👻", "🤖", "👽", "💀", "🎃",
+    "😈", "🤡", "👾", "💩", "🙈", "🙉", "🙊", "😻",
+    "👹", "👺", "🤥", "😤", "😭", "😳", "🥶", "🥵",
   ],
   nature: [
     "🌸", "🌺", "🌻", "🌹", "🌈", "⭐", "🌙", "☀️",
     "❄️", "🔥", "💧", "🌊", "🍀", "🌴", "🌵", "🎄",
-    "🍁", "🌾", "💐", "🌼", "🏵️", "🌷", "🥀", "🌱",
-    "🍃", "🍂", "🌿", "☘️", "🎑", "🎋", "🎍", "🌲",
+    "🍁", "🌾", "💐", "🌼", "🌷", "🌱", "🍃", "🍂",
+    "🌿", "☘️", "🎋", "🎍", "🌲", "🌳", "🌏", "💫",
   ],
   music: [
     "🎸", "🎹", "🥁", "🎺", "🎷", "🎻", "🎼", "🎧",
-    "🎤", "🎵", "🎨", "🖌️", "🖍️", "✏️", "📐", "🎭",
-    "🔊", "📯", "🔔", "🎶", "🎙️", "📻", "💿", "🎚️",
-    "🥏", "🎲", "🎪", "🎠", "🎡", "🎢", "🎮", "🕹️",
+    "🎤", "🎵", "🎨", "✏️", "📐", "🎭", "🔊", "📯",
+    "🔔", "🎶", "📻", "💿", "🎲", "🎪", "🎠", "🎡",
+    "🎢", "🎮", "🕹️", "🎰", "🏆", "🥇", "🥈", "🥉",
   ],
 };
 
@@ -100,14 +100,12 @@ class MemoryGame {
   private theme: Theme = "pokemon";
   private themeData: Map<number, string> = new Map();
 
-  // Audio — pool of pre-unlocked elements for iOS compatibility
-  private matchPool: HTMLAudioElement[] = [];
-  private errorPool: HTMLAudioElement[] = [];
-  private matchPoolIndex: number = 0;
-  private errorPoolIndex: number = 0;
-  private static readonly AUDIO_POOL_SIZE = 4;
+  // Audio — dual system: HTMLAudioElement (Chrome/Android) + Web Audio API (Safari/iOS)
+  private audioCtx: AudioContext | null = null;
+  private matchBuffer: AudioBuffer | null = null;
+  private errorBuffer: AudioBuffer | null = null;
 
-  private static readonly VERSION = "1.2.0";
+  private static readonly VERSION = "1.2.1";
 
   // DOM elements
   private boardEl: HTMLElement;
@@ -147,35 +145,27 @@ class MemoryGame {
   }
 
   private initAudio(): void {
-    // Create a pool of Audio elements for each sound.
-    // iOS only allows each HTMLAudioElement to play once reliably,
-    // so we rotate through a pool of pre-created elements.
-    const createPool = (url: string): HTMLAudioElement[] => {
-      const pool: HTMLAudioElement[] = [];
-      for (let i = 0; i < MemoryGame.AUDIO_POOL_SIZE; i++) {
-        const audio = new Audio(url);
-        audio.load();
-        pool.push(audio);
-      }
-      return pool;
-    };
-
-    this.matchPool = createPool("correct.mp3");
-    this.errorPool = createPool("error.mp3");
-
-    // iOS requires a user gesture to "unlock" audio playback.
-    // On first touch: do a muted play+pause on all pool elements.
+    // On first user gesture: create AudioContext for Safari/iOS
+    // Safari requires AudioContext to be created inside a user gesture
     const unlock = (): void => {
-      [...this.matchPool, ...this.errorPool].forEach((audio) => {
-        audio.muted = true;
-        audio.play().then(() => {
-          audio.pause();
-          audio.muted = false;
-          audio.currentTime = 0;
-        }).catch(() => {
-          audio.muted = false;
-        });
-      });
+      if (this.audioCtx) return;
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+
+      this.audioCtx = new AudioCtx();
+
+      // Fetch + decode audio files into AudioBuffers (callback form for old Safari)
+      const load = (url: string, cb: (buf: AudioBuffer) => void): void => {
+        fetch(url)
+          .then((r) => r.arrayBuffer())
+          .then((raw) => { this.audioCtx!.decodeAudioData(raw, cb, () => {}); })
+          .catch(() => {});
+      };
+
+      load("correct.mp3", (buf) => { this.matchBuffer = buf; });
+      load("error.mp3", (buf) => { this.errorBuffer = buf; });
+
       document.removeEventListener("touchstart", unlock);
       document.removeEventListener("click", unlock);
     };
@@ -405,7 +395,14 @@ class MemoryGame {
 
     if (this.flippedCards.length === 2) {
       this.isLocked = true;
-      // Wait for the 2nd card's flip transition to finish before checking
+      // Play sound immediately inside click handler (user gesture context)
+      // so Safari/Chrome don't block audio playback.
+      // Visual effects are delayed until the flip transition finishes.
+      const firstCard = this.cards.find((c) => c.id === this.flippedCards[0])!;
+      const secondCard = this.cards.find((c) => c.id === this.flippedCards[1])!;
+      const isMatch = firstCard.value === secondCard.value;
+      this.playSound(isMatch ? "match" : "error");
+
       if (cardEl) {
         cardEl.addEventListener("transitionend", () => {
           this.checkMatch();
@@ -422,7 +419,6 @@ class MemoryGame {
     const secondCard = this.cards.find((c) => c.id === secondId)!;
 
     if (firstCard.value === secondCard.value) {
-      this.playSoundFromPool(this.matchPool, "matchPoolIndex");
       firstCard.matched = true;
       secondCard.matched = true;
       this.matchedPairs++;
@@ -454,8 +450,6 @@ class MemoryGame {
         this.gameWon();
       }
     } else {
-      this.playSoundFromPool(this.errorPool, "errorPoolIndex");
-
       const firstEl = this.boardEl.querySelector(`[data-id="${firstId}"]`) as HTMLElement | null;
       const secondEl = this.boardEl.querySelector(`[data-id="${secondId}"]`) as HTMLElement | null;
 
@@ -506,10 +500,24 @@ class MemoryGame {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }
 
-  private playSoundFromPool(pool: HTMLAudioElement[], indexProp: "matchPoolIndex" | "errorPoolIndex"): void {
-    const audio = pool[this[indexProp]];
-    this[indexProp] = (this[indexProp] + 1) % pool.length;
-    audio.currentTime = 0;
+  private playSound(type: "match" | "error"): void {
+    const buffer = type === "match" ? this.matchBuffer : this.errorBuffer;
+
+    // Try Web Audio API first (works on Safari/iOS after unlock)
+    if (this.audioCtx && buffer) {
+      if (this.audioCtx.state === "suspended") {
+        this.audioCtx.resume();
+      }
+      const source = this.audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.audioCtx.destination);
+      source.start(0);
+      return;
+    }
+
+    // Fallback: HTMLAudioElement (works on Chrome/Android)
+    const url = type === "match" ? "correct.mp3" : "error.mp3";
+    const audio = new Audio(url);
     audio.play().catch(() => {});
   }
 
