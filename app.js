@@ -211,13 +211,27 @@ class MemoryGame {
             if (this.theme === "pokemon") {
                 yield this.fetchPokemonImages();
             }
+            else if (this.theme === "dino") {
+                this.loadDinoTheme();
+            }
             else {
                 this.loadEmojiTheme();
             }
         });
     }
+    loadDinoTheme() {
+        const startId = this.getStartId();
+        // Shuffle dino indices 1-43, then pick totalPairs
+        const indices = Array.from({ length: MemoryGame.DINO_TOTAL }, (_, i) => i + 1)
+            .sort(() => Math.random() - 0.5);
+        for (let i = 0; i < this.totalPairs; i++) {
+            const id = startId + i;
+            this.pokemonSprites.set(id, `assets/dino/dinosaur-${indices[i % MemoryGame.DINO_TOTAL]}.png`);
+        }
+        this.updateCardImages();
+    }
     loadEmojiTheme() {
-        if (this.theme === "pokemon")
+        if (this.theme === "pokemon" || this.theme === "dino")
             return;
         const pool = THEME_POOLS[this.theme];
         const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
@@ -266,7 +280,7 @@ class MemoryGame {
             const imageUrl = this.pokemonSprites.get(card.value);
             if (imgEl && imageUrl) {
                 imgEl.src = imageUrl;
-                imgEl.alt = `Pokemon #${card.value}`;
+                imgEl.alt = this.theme === "dino" ? `Dino #${card.value}` : `Pokemon #${card.value}`;
             }
             cardEl.classList.remove("loading");
         });
@@ -293,11 +307,12 @@ class MemoryGame {
             cardEl.classList.add("card", "loading");
             cardEl.setAttribute("data-id", String(card.id));
             cardEl.style.animationDelay = `${index * 20}ms`;
-            if (this.theme === "pokemon") {
+            if (this.theme === "pokemon" || this.theme === "dino") {
+                const altText = this.theme === "pokemon" ? "Pokemon" : "Dinosaur";
                 cardEl.innerHTML = `
           <div class="card-face card-back">?</div>
           <div class="card-face card-front">
-            <img src="" alt="Pokemon" />
+            <img src="" alt="${altText}" />
           </div>
         `;
             }
@@ -503,7 +518,8 @@ class MemoryGame {
         });
     }
 }
-MemoryGame.VERSION = "1.2.1";
+MemoryGame.VERSION = "1.2.3";
+MemoryGame.DINO_TOTAL = 43;
 document.addEventListener("DOMContentLoaded", () => {
     new MemoryGame();
 });

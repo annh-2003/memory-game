@@ -1,4 +1,9 @@
-const CACHE_NAME = "memory-game-v12";
+const CACHE_NAME = "memory-game-v14";
+
+// Generate dino asset paths (43 PNG files from Flaticon)
+const DINO_ASSETS = Array.from({ length: 43 }, (_, i) => {
+  return `./assets/dino/dinosaur-${i + 1}.png`;
+});
 
 const ASSETS_TO_CACHE = [
   "./index.html",
@@ -9,6 +14,7 @@ const ASSETS_TO_CACHE = [
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
+  ...DINO_ASSETS,
 ];
 
 // Install: cache all static assets

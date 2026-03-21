@@ -6,7 +6,7 @@ interface Card {
 }
 
 type Difficulty = "easy" | "medium" | "hard";
-type Theme = "pokemon" | "emoji" | "animal" | "fruit" | "vehicle" | "snack" | "sport" | "face" | "nature" | "music";
+type Theme = "pokemon" | "dino" | "emoji" | "animal" | "fruit" | "vehicle" | "snack" | "sport" | "face" | "nature" | "music";
 
 interface DifficultyConfig {
   cols: number;
@@ -22,7 +22,7 @@ const DIFFICULTY_MAP: Record<Difficulty, DifficultyConfig> = {
 };
 
 // All emojis are Unicode ≤ 10.0 (iOS 11.1+) for maximum compatibility
-const THEME_POOLS: Record<Exclude<Theme, "pokemon">, string[]> = {
+const THEME_POOLS: Record<Exclude<Theme, "pokemon" | "dino">, string[]> = {
   emoji: [
     "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣",
     "😊", "😇", "🙂", "😉", "😍", "😘", "😜", "🤪",
@@ -105,7 +105,7 @@ class MemoryGame {
   private matchBuffer: AudioBuffer | null = null;
   private errorBuffer: AudioBuffer | null = null;
 
-  private static readonly VERSION = "1.2.1";
+  private static readonly VERSION = "1.2.3";
 
   // DOM elements
   private boardEl: HTMLElement;
@@ -250,13 +250,31 @@ class MemoryGame {
 
     if (this.theme === "pokemon") {
       await this.fetchPokemonImages();
+    } else if (this.theme === "dino") {
+      this.loadDinoTheme();
     } else {
       this.loadEmojiTheme();
     }
   }
 
+  private static readonly DINO_TOTAL = 43;
+
+  private loadDinoTheme(): void {
+    const startId = this.getStartId();
+    // Shuffle dino indices 1-43, then pick totalPairs
+    const indices = Array.from({ length: MemoryGame.DINO_TOTAL }, (_, i) => i + 1)
+      .sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < this.totalPairs; i++) {
+      const id = startId + i;
+      this.pokemonSprites.set(id, `assets/dino/dinosaur-${indices[i % MemoryGame.DINO_TOTAL]}.png`);
+    }
+
+    this.updateCardImages();
+  }
+
   private loadEmojiTheme(): void {
-    if (this.theme === "pokemon") return;
+    if (this.theme === "pokemon" || this.theme === "dino") return;
     const pool = THEME_POOLS[this.theme];
 
     const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
@@ -316,7 +334,7 @@ class MemoryGame {
       const imageUrl = this.pokemonSprites.get(card.value);
       if (imgEl && imageUrl) {
         imgEl.src = imageUrl;
-        imgEl.alt = `Pokemon #${card.value}`;
+        imgEl.alt = this.theme === "dino" ? `Dino #${card.value}` : `Pokemon #${card.value}`;
       }
       cardEl.classList.remove("loading");
     });
@@ -347,11 +365,12 @@ class MemoryGame {
       cardEl.setAttribute("data-id", String(card.id));
       cardEl.style.animationDelay = `${index * 20}ms`;
 
-      if (this.theme === "pokemon") {
+      if (this.theme === "pokemon" || this.theme === "dino") {
+        const altText = this.theme === "pokemon" ? "Pokemon" : "Dinosaur";
         cardEl.innerHTML = `
           <div class="card-face card-back">?</div>
           <div class="card-face card-front">
-            <img src="" alt="Pokemon" />
+            <img src="" alt="${altText}" />
           </div>
         `;
       } else {
